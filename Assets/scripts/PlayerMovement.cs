@@ -2,44 +2,26 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public Vector2 minBounds;
-    public Vector2 maxBounds;
-
-    public float moveSpeed = 5f;
+    public float moveSpeed = 5.0f;
 
     private Rigidbody2D rb;
-    private Vector2 movement;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        void Start()
+        if (rb == null)
         {
-            rb = GetComponent<Rigidbody2D>();
-
-            // Ä«¸Ş¶ó ±âÁØ È­¸é ¹üÀ§¸¦ °¡Á®¿Í¼­ ÀÚµ¿ ¼³Á¤
-            Vector3 screenBottomLeft = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, 0));
-            Vector3 screenTopRight = Camera.main.ViewportToWorldPoint(new Vector3(1, 1, 0));
-
-            minBounds = new Vector2(screenBottomLeft.x, screenBottomLeft.y);
-            maxBounds = new Vector2(screenTopRight.x, screenTopRight.y);
+            Debug.LogError("PlayerMovement ìŠ¤í¬ë¦½íŠ¸ì—ëŠ” Rigidbody2D ì»´í¬ë„ŒíŠ¸ê°€ í•„ìš”í•©ë‹ˆë‹¤!");
         }
-    }
-
-    void Update()
-    {
-        movement.x = Input.GetAxisRaw("Horizontal");
-        movement.y = Input.GetAxisRaw("Vertical");
     }
 
     void FixedUpdate()
     {
-        Vector2 newPos = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
 
-        // ¹è°æ ¹üÀ§ ¾È¿¡¸¸ ÀÌµ¿
-        newPos.x = Mathf.Clamp(newPos.x, minBounds.x, maxBounds.x);
-        newPos.y = Mathf.Clamp(newPos.y, minBounds.y, maxBounds.y);
+        Vector2 moveInput = new Vector2(horizontalInput, verticalInput).normalized;
 
-        rb.MovePosition(newPos);
+        rb.linearVelocity = moveInput * moveSpeed;
     }
 }
