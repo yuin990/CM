@@ -1,6 +1,3 @@
-# 이 파일은 Unity 프로젝트에서 Git으로 관리하지 않을 파일들을 명시합니다.
-
-# 빌드 관련 파일
 /[Bb]uilds/
 
 # Unity 관련 파일
@@ -12,8 +9,10 @@
 /Assets/AssetStoreTools/
 /Assets/Editor/Editor.log
 
+# 로컬 설정 파일
 /UserSettings/
 
+# Unity 프로젝트에서 생성되는 기타 파일
 *.csproj
 *.unityproj
 *.sln
@@ -25,4 +24,5 @@
 *.meta
 *.asset
 
+# 텍스트 에디터 관련 파일 (예: VS Code)
 .vscode/
