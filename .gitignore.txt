@@ -1,0 +1,28 @@
+# 이 파일은 Unity 프로젝트에서 Git으로 관리하지 않을 파일들을 명시합니다.
+
+# 빌드 관련 파일
+/[Bb]uilds/
+
+# Unity 관련 파일
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/Assets/AssetStoreTools/
+/Assets/Editor/Editor.log
+
+/UserSettings/
+
+*.csproj
+*.unityproj
+*.sln
+*.pidb
+*.suo
+*.user
+*.userprefs
+*.DS_Store
+*.meta
+*.asset
+
+.vscode/
