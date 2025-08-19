@@ -51,7 +51,7 @@ class Player(pygame.sprite.Sprite):
         for i in range(len(frame_data)):
             frame_name = f"Character {i}.png"
             if frame_name in frame_data:
-                frame = frame_data['Character ' + str(i) + '.png']
+                frame = frame_data[frame_name]
                 x, y, w, h = frame['frame']['x'], frame['frame']['y'], frame['frame']['w'], frame['frame']['h']
                 duration = 500
                 sub_image = self.spritesheet.subsurface(pygame.Rect(x, y, w, h))
@@ -63,7 +63,6 @@ class Player(pygame.sprite.Sprite):
                 elif i in [6, 7]:
                     self.animations['walk_left'].append((sub_image, duration))
 
-        # walk_left 애니메이션을 좌우 반전하여 walk_right 애니메이션 생성
         for image, duration in self.animations['walk_left']:
             flipped_image = pygame.transform.flip(image, True, False)
             self.animations['walk_right'].append((flipped_image, duration))
@@ -118,9 +117,34 @@ class Player(pygame.sprite.Sprite):
         old_center = self.rect.center
         self.rect = self.image.get_rect(center=old_center)
 
-    def update(self, dt):
+    def update(self, dt, walls):
         self.handle_input()
         self.update_state()
         self.animate(dt)
-        self.pos += self.velocity * self.speed * dt
-        self.rect.center = round(self.pos.x), round(self.pos.y)
+
+        self.pos.x += self.velocity.x * self.speed * dt
+        self.rect.centerx = round(self.pos.x)
+        self.collide_walls(walls, 'x')
+        self.pos.x = self.rect.centerx
+
+        self.pos.y += self.velocity.y * self.speed * dt
+        self.rect.centery = round(self.pos.y)
+        self.collide_walls(walls, 'y')
+        self.pos.y = self.rect.centery
+
+    def collide_walls(self, walls, direction):
+        if direction == 'x':
+            hits = pygame.sprite.spritecollide(self, walls, False)
+            for wall in hits:
+                if self.velocity.x > 0:
+                    self.rect.right = wall.rect.left
+                elif self.velocity.x < 0:
+                    self.rect.left = wall.rect.right
+
+        if direction == 'y':
+            hits = pygame.sprite.spritecollide(self, walls, False)
+            for wall in hits:
+                if self.velocity.y > 0:
+                    self.rect.bottom = wall.rect.top
+                elif self.velocity.y < 0:
+                    self.rect.top = wall.rect.bottom
