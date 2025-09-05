@@ -1,6 +1,9 @@
+# level.py
 import pygame
 import json
 import os
+from puzzle import AtomPuzzle
+from object import Object
 
 
 class Level:
@@ -14,6 +17,7 @@ class Level:
 
         self.room_names = list(self.rooms.keys())
         self.current_room_index = 0
+        self.is_puzzle_solved = False
 
         self.map_width = len(self.rooms[self.room_names[0]][0]) * self.tile_size
         self.map_height = len(self.rooms[self.room_names[0]]) * self.tile_size
@@ -23,11 +27,16 @@ class Level:
         self.door_sprite = None
         self.e_button = None
         self.lightbulb = None
+        self.nucleus = None
+        self.electrons = pygame.sprite.Group()
         self.wall_sprites = pygame.sprite.Group()
+        self.puzzle = AtomPuzzle()
+        self.all_sprites = all_sprites
+        self.objects_list = pygame.sprite.Group()
+        self.held_object = None
         self.load_room(self.room_names[self.current_room_index], all_sprites, None)
 
     def load_room(self, room_name, all_sprites, player):
-        # 기존 맵 요소만 제거 (플레이어는 유지)
         for sprite in list(all_sprites):
             if sprite != player:
                 sprite.kill()
@@ -36,13 +45,45 @@ class Level:
         self.door_sprite = None
         self.e_button = None
         self.lightbulb = None
+        self.nucleus = None
+        self.electrons.empty()
+        self.objects_list.empty()
 
         self.room_map = self.rooms[room_name]
         self.create_map_tiles(all_sprites)
+        self.create_e_button(all_sprites)
 
         if room_name == "room_1":
             self.create_door(all_sprites)
             self.create_lightbulb(all_sprites)
+
+        elif room_name == "room_2":
+            self.create_single_electron(all_sprites)
+            if self.is_puzzle_solved:
+                self.create_door(all_sprites)
+
+    def create_single_electron(self, all_sprites):
+        try:
+            electron_image = pygame.image.load('assets/images/puzzle2.png').convert_alpha()
+            # 이미지를 300x300으로 키웁니다.
+            electron_image = pygame.transform.scale(electron_image, (200, 200))
+        except pygame.error:
+            electron_image = pygame.Surface((64, 64))
+            electron_image.fill((0, 0, 255))
+            print("puzzle2.png 파일을 찾을 수 없습니다. 임시 스프라이트를 사용합니다.")
+
+        center_x = self.map_offset_x + self.map_width // 2
+        center_y = self.map_offset_y + self.map_height // 2
+
+        # 키운 이미지 자체를 전달합니다.
+        electron = self.create_object_with_image(center_x, center_y, electron_image)
+        self.electrons.add(electron)
+        self.objects_list.add(electron)
+
+    def create_object_with_image(self, x, y, image):
+        new_object = Object(x, y, image)
+        self.all_sprites.add(new_object, layer=1)
+        return new_object
 
     def create_map_tiles(self, all_sprites):
         for row_index, row in enumerate(self.room_map):
@@ -65,6 +106,19 @@ class Level:
 
                     all_sprites.add(floor_tile, layer=0)
 
+    def create_e_button(self, all_sprites):
+        try:
+            e_button_image = pygame.image.load('assets/images/e_button.png').convert_alpha()
+        except pygame.error:
+            e_button_image = pygame.Surface((64, 64))
+            e_button_image.fill((255, 255, 0))
+            print("e_button.png 파일을 찾을 수 없습니다. 임시 스프라이트를 사용합니다.")
+
+        self.e_button = pygame.sprite.Sprite()
+        self.e_button.image = e_button_image
+        self.e_button.rect = e_button_image.get_rect(center=(-100, -100))
+        all_sprites.add(self.e_button, layer=2)
+
     def create_door(self, all_sprites):
         self.door_sprite = pygame.sprite.Sprite()
         door_width = 16
@@ -79,18 +133,6 @@ class Level:
 
         all_sprites.add(self.door_sprite, layer=1)
         self.wall_sprites.add(self.door_sprite)
-
-        try:
-            e_button_image = pygame.image.load('assets/images/e_button.png').convert_alpha()
-        except pygame.error:
-            e_button_image = pygame.Surface((64, 64))
-            e_button_image.fill((255, 255, 0))
-            print("e_button.png 파일을 찾을 수 없습니다. 임시 스프라이트를 사용합니다.")
-
-        self.e_button = pygame.sprite.Sprite()
-        self.e_button.image = e_button_image
-        self.e_button.rect = self.e_button.image.get_rect(center=(-100, -100))
-        all_sprites.add(self.e_button, layer=2)
 
     def create_lightbulb(self, all_sprites):
         try:
@@ -111,3 +153,44 @@ class Level:
 
         all_sprites.add(self.lightbulb, layer=1)
         self.wall_sprites.add(self.lightbulb)
+
+    def create_atom_puzzle(self, all_sprites):
+        try:
+            orbital_image = pygame.image.load('assets/images/puzzle1.png').convert_alpha()
+            orbital_image = pygame.transform.scale(orbital_image, (200, 200))
+        except pygame.error:
+            orbital_image = pygame.Surface((300, 300))
+            orbital_image.fill((255, 255, 0))
+            print("puzzle1.png 파일을 찾을 수 없습니다. 임시 스프라이트를 사용합니다.")
+
+        self.nucleus = pygame.sprite.Sprite()
+        self.nucleus.image = orbital_image
+
+        center_x = self.map_offset_x + self.map_width // 2
+        center_y = self.map_offset_y + self.map_height // 2
+
+        self.nucleus.rect = self.nucleus.image.get_rect(center=(center_x, center_y))
+
+        all_sprites.add(self.nucleus, layer=1)
+
+        try:
+            electron_image = pygame.image.load('assets/images/puzzle2.png').convert_alpha()
+            electron_image = pygame.transform.scale(electron_image, (170, 170))
+        except pygame.error:
+            electron_image = pygame.Surface((64, 64))
+            electron_image.fill((0, 0, 255))
+            print("puzzle2.png 파일을 찾을 수 없습니다. 임시 스프라이트를 사용합니다.")
+
+        electron_positions = [
+            (center_x - 200, center_y - 200), (center_x + 200, center_y - 200),
+            (center_x - 200, center_y), (center_x + 200, center_y),
+            (center_x - 200, center_y + 200), (center_x + 200, center_y + 200),
+            (center_x, center_y - 200), (center_x, center_y + 200)
+        ]
+
+        for pos in electron_positions:
+            electron = pygame.sprite.Sprite()
+            electron.image = electron_image
+            electron.rect = electron.image.get_rect(center=pos)
+            self.electrons.add(electron)
+            all_sprites.add(electron, layer=1)
