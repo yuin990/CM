@@ -1,27 +1,27 @@
-import pygame
+import pygame as pg
 import math
 from player import Player
 from level import Level
 from menu import Menu
 
-pygame.init()
-pygame.mixer.init()
+pg.init()
+pg.mixer.init()
 
 screen_width = 800
 screen_height = 600
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("코드마스터")
+screen = pg.display.set_mode((screen_width, screen_height))
+pg.display.set_caption("코드마스터")
 
-clock = pygame.time.Clock()
+clock = pg.time.Clock()
 
 try:
-    font = pygame.font.Font('assets/fonts/Galmuri9.ttf', 24)
-    title_font = pygame.font.Font('assets/fonts/Galmuri9.ttf', 48)
-    puzzle_font = pygame.font.Font('assets/fonts/Galmuri9.ttf', 48)
-except pygame.error:
-    font = pygame.font.SysFont('Arial', 24)
-    title_font = pygame.font.SysFont('Arial', 48)
-    puzzle_font = pygame.font.SysFont('Arial', 48)
+    font = pg.font.Font('assets/fonts/Galmuri9.ttf', 24)
+    title_font = pg.font.Font('assets/fonts/Galmuri9.ttf', 48)
+    puzzle_font = pg.font.Font('assets/fonts/Galmuri9.ttf', 48)
+except pg.error:
+    font = pg.font.SysFont('Arial', 24)
+    title_font = pg.font.SysFont('Arial', 48)
+    puzzle_font = pg.font.SysFont('Arial', 48)
     print("Galmuri9.ttf 폰트를 찾을 수 없습니다. 기본 폰트를 사용합니다.")
 
 game_state = "menu"
@@ -41,15 +41,15 @@ puzzle_text = "산소를 만들자!"
 puzzle_text_surface = None
 puzzle_text_rect = None
 
-all_sprites = pygame.sprite.LayeredUpdates()
+all_sprites = pg.sprite.LayeredUpdates()
 level = None
 player = None
 click_sound = None
 
 try:
-    click_sound = pygame.mixer.Sound('assets/audio/click.wav')
-    pygame.mixer.music.load('assets/audio/back.mp3')
-except pygame.error:
+    click_sound = pg.mixer.Sound('assets/audio/click.wav')
+    pg.mixer.music.load('assets/audio/back.mp3')
+except pg.error:
     print("사운드 파일을 찾을 수 없습니다. 소리 재생을 건너뜁니다.")
 
 menu_screen = Menu(screen, font, title_font, screen_width, screen_height, click_sound)
@@ -62,11 +62,11 @@ def start_game():
     game_state = "playing"
     all_sprites.empty()
 
-    if pygame.mixer.music.get_busy():
-        pygame.mixer.music.stop()
-    pygame.mixer.music.play(-1)
+    if pg.mixer.music.get_busy():
+        pg.mixer.music.stop()
+    pg.mixer.music.play(-1)
 
-    level = Level(all_sprites)
+    level = Level(all_sprites, screen)
 
     player_start_pos_x = level.map_offset_x + level.tile_size * 2.5
     player_start_pos_y = level.map_offset_y + level.tile_size * 1.5
@@ -78,7 +78,6 @@ def start_game():
     tutorial_text_rect = tutorial_text_surface.get_rect(center=(screen_width // 2, screen_height - 30))
 
     puzzle_text_surface = puzzle_font.render(puzzle_text, True, (0, 0, 0))
-    # 게임 시작 시 held_object 초기화
     held_object = None
 
 
@@ -91,19 +90,18 @@ def end_game():
     tutorial_text_surface = None
     tutorial_text_rect = None
     held_object = None
-
-    pygame.mixer.music.stop()
+    pg.mixer.music.stop()
 
 
 running = True
-last_time = pygame.time.get_ticks()
+last_time = pg.time.get_ticks()
 
 while running:
-    dt = (pygame.time.get_ticks() - last_time) / 1000.0
-    last_time = pygame.time.get_ticks()
+    dt = (pg.time.get_ticks() - last_time) / 1000.0
+    last_time = pg.time.get_ticks()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
             running = False
 
         if game_state == "menu":
@@ -112,15 +110,8 @@ while running:
                 start_game()
 
         elif game_state == "playing":
-            exit_button_rect = pygame.Rect(screen_width - 100, 20, 80, 30)
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if exit_button_rect.collidepoint(event.pos):
-                    end_game()
-                    if click_sound:
-                        click_sound.play()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_e:
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_e:
                     if click_sound:
                         click_sound.play()
                     if level.lightbulb is not None and player.rect.colliderect(level.lightbulb.rect.inflate(32, 32)):
@@ -141,22 +132,21 @@ while running:
                         all_sprites.empty()
                         level.load_room(next_room_name, all_sprites, player)
                         all_sprites.add(player, layer=1)
-                        # 방이동 시 held_object 초기화
                         held_object = None
 
                         if next_room_name == "room_2":
-                            player.pos = pygame.math.Vector2(level.map_offset_x + level.tile_size * 1.5,
-                                                             level.map_offset_y + (
-                                                                     len(level.room_map) // 2) * level.tile_size + level.tile_size * 0.5)
+                            player.pos = pg.math.Vector2(level.map_offset_x + level.tile_size * 1.5,
+                                                         level.map_offset_y + (
+                                                                 len(level.room_map) // 2) * level.tile_size + level.tile_size * 0.5)
                         else:
-                            player.pos = pygame.math.Vector2(level.map_offset_x + level.tile_size * 2.5,
-                                                             level.map_offset_y + level.tile_size * 1.5)
+                            player.pos = pg.math.Vector2(level.map_offset_x + level.tile_size * 2.5,
+                                                         level.map_offset_y + level.tile_size * 1.5)
 
                     elif level.nucleus is not None and player.rect.colliderect(level.nucleus.rect.inflate(32, 32)):
                         print("원자 퍼즐과 상호작용합니다.")
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_e:
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_e:
                     if held_object:
                         held_object.is_held = False
                         held_object = None
@@ -194,7 +184,7 @@ while running:
 
         if level.room_names[level.current_room_index] == "room_1":
             if tutorial_text_surface is not None:
-                tutorial_text_surface.set_alpha(int(128 + 127 * math.sin(pygame.time.get_ticks() / 500)))
+                tutorial_text_surface.set_alpha(int(128 + 127 * math.sin(pg.time.get_ticks() / 500)))
                 screen.blit(tutorial_text_surface, tutorial_text_rect)
 
         if level.lightbulb is not None and current_message_index != -1 and message_timer > 0:
@@ -209,14 +199,7 @@ while running:
                 center=(screen_width // 2, screen_height // 2 - 200))
             screen.blit(puzzle_text_surface, puzzle_text_rect)
 
-        exit_button_rect = pygame.Rect(screen_width - 100, 20, 80, 30)
-        pygame.draw.rect(screen, (200, 50, 50), exit_button_rect, border_radius=5)
-        exit_text = font.render("나가기", True, (255, 255, 255))
-        exit_text_rect = exit_text.get_rect(center=exit_button_rect.center)
-        screen.blit(exit_text, exit_text_rect)
-
-    pygame.display.flip()
-
+    pg.display.flip()
     clock.tick(60)
 
-pygame.quit()
+pg.quit()
