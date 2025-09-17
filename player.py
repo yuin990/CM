@@ -1,14 +1,14 @@
-import pygame
+import pygame as pg
 import json
 import os
 
 
-class Player(pygame.sprite.Sprite):
+class Player(pg.sprite.Sprite):
     def __init__(self, pos, spritesheet_path, json_path, layer, *groups):
         super().__init__(*groups)
         self._layer = layer
 
-        self.spritesheet = pygame.image.load(spritesheet_path).convert_alpha()
+        self.spritesheet = pg.image.load(spritesheet_path).convert_alpha()
         with open(json_path, 'r', encoding='utf-8') as f:
             self.anim_data = json.load(f)
 
@@ -26,8 +26,8 @@ class Player(pygame.sprite.Sprite):
         self.image = self.scaled_animations[self.state][self.current_frame][0]
         self.rect = self.image.get_rect(center=pos)
 
-        self.pos = pygame.math.Vector2(self.rect.center)
-        self.velocity = pygame.math.Vector2(0, 0)
+        self.pos = pg.math.Vector2(self.rect.center)
+        self.velocity = pg.math.Vector2(0, 0)
         self.speed = 200
 
     def _create_scaled_animations(self):
@@ -36,7 +36,7 @@ class Player(pygame.sprite.Sprite):
             for base_image, duration in frames:
                 original_size = base_image.get_size()
                 scaled_size = (int(original_size[0] * self.scale_factor), int(original_size[1] * self.scale_factor))
-                scaled_image = pygame.transform.scale(base_image, scaled_size)
+                scaled_image = pg.transform.scale(base_image, scaled_size)
                 self.scaled_animations[state].append((scaled_image, duration))
 
     def load_animations(self):
@@ -54,7 +54,7 @@ class Player(pygame.sprite.Sprite):
                 frame = frame_data[frame_name]
                 x, y, w, h = frame['frame']['x'], frame['frame']['y'], frame['frame']['w'], frame['frame']['h']
                 duration = 500
-                sub_image = self.spritesheet.subsurface(pygame.Rect(x, y, w, h))
+                sub_image = self.spritesheet.subsurface(pg.Rect(x, y, w, h))
 
                 if i in [0, 1]:
                     self.animations['idle_front'].append((sub_image, duration))
@@ -64,7 +64,7 @@ class Player(pygame.sprite.Sprite):
                     self.animations['walk_left'].append((sub_image, duration))
 
         for image, duration in self.animations['walk_left']:
-            flipped_image = pygame.transform.flip(image, True, False)
+            flipped_image = pg.transform.flip(image, True, False)
             self.animations['walk_right'].append((flipped_image, duration))
 
     def set_state(self, new_state):
@@ -74,17 +74,17 @@ class Player(pygame.sprite.Sprite):
             self.animation_timer = 0
 
     def handle_input(self):
-        keys = pygame.key.get_pressed()
+        keys = pg.key.get_pressed()
         self.velocity.x = 0
         self.velocity.y = 0
 
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+        if keys[pg.K_a] or keys[pg.K_LEFT]:
             self.velocity.x = -1
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+        if keys[pg.K_d] or keys[pg.K_RIGHT]:
             self.velocity.x = 1
-        if keys[pygame.K_w] or keys[pygame.K_UP]:
+        if keys[pg.K_w] or keys[pg.K_UP]:
             self.velocity.y = -1
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+        if keys[pg.K_s] or keys[pg.K_DOWN]:
             self.velocity.y = 1
 
         if self.velocity.length() > 0:
@@ -134,7 +134,7 @@ class Player(pygame.sprite.Sprite):
 
     def collide_walls(self, walls, direction):
         if direction == 'x':
-            hits = pygame.sprite.spritecollide(self, walls, False)
+            hits = pg.sprite.spritecollide(self, walls, False)
             for wall in hits:
                 if self.velocity.x > 0:
                     self.rect.right = wall.rect.left
@@ -142,7 +142,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.left = wall.rect.right
 
         if direction == 'y':
-            hits = pygame.sprite.spritecollide(self, walls, False)
+            hits = pg.sprite.spritecollide(self, walls, False)
             for wall in hits:
                 if self.velocity.y > 0:
                     self.rect.bottom = wall.rect.top
